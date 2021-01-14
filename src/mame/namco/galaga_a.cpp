@@ -360,9 +360,9 @@ DISCRETE_SOUND_START(galaga_discrete)
 	 ************************************************/
 	DISCRETE_MIXER3(NODE_90,
 					1,                  /* ENAB */
-					GALAGA_CHANL1_SND,  /* IN0 */
-					GALAGA_CHANL2_SND,  /* IN1 */
-					GALAGA_CHANL3_SND,  /* IN2 */
+					NODE_20,  /* IN0 */
+					GALAGA_CHANL1_SND,  /* IN1 */
+					GALAGA_CHANL2_SND,  /* IN2 */
 					&galaga_final_mixer /* INFO */)
 	DISCRETE_OUTPUT(NODE_90, 1)
 DISCRETE_SOUND_END
