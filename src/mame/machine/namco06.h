@@ -34,6 +34,7 @@ private:
 
 	TIMER_CALLBACK_MEMBER( nmi_generate );
 	TIMER_CALLBACK_MEMBER( write_sync );
+	TIMER_CALLBACK_MEMBER( ctrl_w_sync );
 
 	// internal state
 	emu_timer *m_nmi_timer;

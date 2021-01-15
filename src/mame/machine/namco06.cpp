@@ -186,7 +186,12 @@ uint8_t namco_06xx_device::ctrl_r()
 
 void namco_06xx_device::ctrl_w(uint8_t data)
 {
-	m_control = data;
+          machine().scheduler().synchronize(timer_expired_delegate(FUNC(namco_06xx_device::ctrl_w_sync),this), data);
+}
+
+TIMER_CALLBACK_MEMBER( namco_06xx_device::ctrl_w_sync )
+{
+	m_control = param;
 
 	// The upper 3 control bits are the clock divider.
 	if ((m_control & 0xe0) == 0)
