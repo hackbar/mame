@@ -33,6 +33,7 @@ private:
 	void set_nmi(int state);
 
 	TIMER_CALLBACK_MEMBER( nmi_generate );
+	TIMER_CALLBACK_MEMBER( write_sync );
 
 	// internal state
 	emu_timer *m_nmi_timer;
