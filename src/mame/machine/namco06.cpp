@@ -211,9 +211,7 @@ void namco_06xx_device::ctrl_w(uint8_t data)
 
 		uint8_t num_shifts = (m_control & 0xe0) >> 5;
 		uint8_t divisor = 1 << num_shifts;
-		// The next change should happen on the next clock falling edge.
-		// Xevious' race causes this to bootloopsif it isn't 0.
-		m_nmi_timer->adjust(attotime::zero, 0, attotime::from_hz(clock() / divisor) / 2);
+		m_nmi_timer->adjust(attotime::from_hz(clock()) / 2, 0, attotime::from_hz(clock() / divisor) / 2);
 	}
 }
 
