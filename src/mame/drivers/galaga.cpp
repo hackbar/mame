@@ -1621,7 +1621,7 @@ void bosco_state::bosco(machine_config &config)
 	n06xx_0.chip_select_callback<3>().set("54xx", FUNC(namco_54xx_device::chip_select));
 	n06xx_0.write_callback<3>().set("54xx", FUNC(namco_54xx_device::write));
 
-	namco_06xx_device &n06xx_1(NAMCO_06XX(config, "06xx_1", MASTER_CLOCK/6/64));
+	namco_06xx_device &n06xx_1(NAMCO_06XX(config, "06xx_1", MASTER_CLOCK/6/256));
 	n06xx_1.set_maincpu(m_subcpu);
 	n06xx_1.read_callback<0>().set("50xx_2", FUNC(namco_50xx_device::read));
 	n06xx_1.chip_select_callback<0>().set("50xx_2", FUNC(namco_50xx_device::chip_select));
