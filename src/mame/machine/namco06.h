@@ -39,6 +39,7 @@ private:
 	// internal state
 	emu_timer *m_nmi_timer;
 	uint8_t m_control;
+	uint8_t m_data;
 	bool m_next_timer_state;
 	bool m_nmi_stretch;
 	bool m_rw_stretch;

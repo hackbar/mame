@@ -49,6 +49,7 @@
 
 #include "emu.h"
 #include "namco52.h"
+#include "logmacro.h"
 
 WRITE_LINE_MEMBER( namco_52xx_device::reset )
 {
@@ -58,6 +59,7 @@ WRITE_LINE_MEMBER( namco_52xx_device::reset )
 
 uint8_t namco_52xx_device::K_r()
 {
+  XLOG("%s 52 read %x\n", machine().time().as_string(), m_latched_cmd);
 	return m_latched_cmd & 0x0f;
 }
 
@@ -75,7 +77,6 @@ uint8_t namco_52xx_device::R1_r()
 {
 	return m_romread(m_address) >> 4;
 }
-
 
 void namco_52xx_device::P_w(uint8_t data)
 {
@@ -108,11 +109,13 @@ void namco_52xx_device::write(uint8_t data)
 
 TIMER_CALLBACK_MEMBER( namco_52xx_device::write_sync )
 {
+  XLOG("%s 52 write %x\n", machine().time().as_string(), param);
 	m_latched_cmd = param;
 }
 
 WRITE_LINE_MEMBER( namco_52xx_device::chip_select )
 {
+  if (state == ASSERT_LINE) XLOG("%s 52 got int\n", machine().time().as_string());
 	m_cpu->set_input_line(0, state);
 }
 

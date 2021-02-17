@@ -51,7 +51,7 @@
 
 #include "emu.h"
 #include "namco54.h"
-
+#include "logmacro.h"
 
 WRITE_LINE_MEMBER( namco_54xx_device::reset )
 {
@@ -99,6 +99,7 @@ TIMER_CALLBACK_MEMBER( namco_54xx_device::write_sync )
 
 WRITE_LINE_MEMBER( namco_54xx_device::chip_select )
 {
+  if (state == ASSERT_LINE) XLOG("54 %.7fs cs 1\n", machine().time().as_string());
 	m_cpu->set_input_line(0, state);
 }
 

@@ -101,6 +101,7 @@
 
 TIMER_CALLBACK_MEMBER( namco_06xx_device::nmi_generate )
 {
+	if (tag() == ::std::string(":06xx_0")) XLOG("06 %s NMI fired\n", machine().time().as_string());
 	// This timer runs at twice the clock, since we do work on both the
 	// rising and falling edge.
 	//
@@ -167,15 +168,18 @@ void namco_06xx_device::data_w(offs_t offset, uint8_t data)
 
 TIMER_CALLBACK_MEMBER( namco_06xx_device::write_sync )
 {
+  if (tag() == ::std::string(":06xx_0") && m_control & 0x02) XLOG("%s 06 write %x\n", machine().time().as_string(), param);
+	m_data = param;
 	if (BIT(m_control, 4))
 	{
 		logerror("%s: 06XX '%s' write in read mode %02x\n",machine().describe_context(),tag(),m_control);
+		XLOG("mcontrol is %x, data is %x\n", m_control, m_data);
 		return;
 	}
-	if (BIT(m_control, 0)) m_write[0](0, param);
-	if (BIT(m_control, 1)) m_write[1](0, param);
-	if (BIT(m_control, 2)) m_write[2](0, param);
-	if (BIT(m_control, 3)) m_write[3](0, param);
+	if (BIT(m_control, 0)) m_write[0](0, m_data);
+	if (BIT(m_control, 1)) m_write[1](0, m_data);
+	if (BIT(m_control, 2)) m_write[2](0, m_data);
+	if (BIT(m_control, 3)) m_write[3](0, m_data);
 }
 
 
@@ -191,6 +195,7 @@ void namco_06xx_device::ctrl_w(uint8_t data)
 
 TIMER_CALLBACK_MEMBER( namco_06xx_device::ctrl_w_sync )
 {
+  if (tag() == ::std::string(":06xx_0")) XLOG("%s 06 ctrl_w %x\n", machine().time().as_string(), param);
 	m_control = param;
 
 	// The upper 3 control bits are the clock divider.
@@ -217,7 +222,12 @@ TIMER_CALLBACK_MEMBER( namco_06xx_device::ctrl_w_sync )
 		uint8_t num_shifts = (m_control & 0xe0) >> 5;
 		uint8_t divisor = 1 << num_shifts;
 		m_nmi_timer->adjust(attotime::from_hz(clock()) / 2, 0, attotime::from_hz(clock() / divisor) / 2);
+		if (tag() == ::std::string(":06xx_0")) XLOG("06 %s scheduling NMI timer %f\n", machine().time().as_string(), attotime::from_hz(clock()).as_string());
 	}
+	//if (BIT(m_control, 0)) m_write[0](0, m_data);
+	//if (BIT(m_control, 1)) m_write[1](0, m_data);
+	//if (BIT(m_control, 2)) m_write[2](0, m_data);
+	//if (BIT(m_control, 3)) m_write[3](0, m_data);
 }
 
 
@@ -235,6 +245,7 @@ DEFINE_DEVICE_TYPE(NAMCO_06XX, namco_06xx_device, "namco06", "Namco 06xx")
 namco_06xx_device::namco_06xx_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, NAMCO_06XX, tag, owner, clock)
 	, m_control(0)
+	, m_data(0)
 	, m_next_timer_state(false)
 	, m_nmi_stretch(false)
 	, m_rw_stretch(false)
@@ -262,6 +273,7 @@ void namco_06xx_device::device_start()
 	m_nmi_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(namco_06xx_device::nmi_generate),this));
 
 	save_item(NAME(m_control));
+	save_item(NAME(m_data));
 	save_item(NAME(m_next_timer_state));
 	save_item(NAME(m_nmi_stretch));
 	save_item(NAME(m_rw_stretch));

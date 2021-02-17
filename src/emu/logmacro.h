@@ -24,3 +24,5 @@
 #define LOGMASKED(mask, ...) do { if (VERBOSE & (mask)) (LOG_OUTPUT_FUNC)(__VA_ARGS__); } while (false)
 
 #define LOG(...) LOGMASKED(LOG_GENERAL, __VA_ARGS__)
+
+#define XLOG(...) (LOG_OUTPUT_FUNC)(__VA_ARGS__)
