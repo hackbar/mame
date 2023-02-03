@@ -30,16 +30,18 @@ protected:
 	virtual void device_reset() override;
 
 private:
+	void reset_clock_divide_count();
 	void set_nmi(int state);
 
-	TIMER_CALLBACK_MEMBER( nmi_generate );
+	TIMER_CALLBACK_MEMBER( clock_timer );
 	TIMER_CALLBACK_MEMBER( write_sync );
 	TIMER_CALLBACK_MEMBER( ctrl_w_sync );
 
 	// internal state
-	emu_timer *m_nmi_timer = nullptr;
+	emu_timer *m_clock = nullptr;
 	uint8_t m_control;
-	bool m_next_timer_state;
+	bool m_timer_state;
+	uint8_t m_clock_divide_count;
 	bool m_read_stretch;
 
 	required_device<cpu_device> m_nmicpu;

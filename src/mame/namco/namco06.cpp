@@ -99,40 +99,6 @@
 #include "logmacro.h"
 
 
-TIMER_CALLBACK_MEMBER( namco_06xx_device::nmi_generate )
-{
-	// This timer runs at twice the clock, since we do work on both the
-	// rising and falling edge.
-	//
-	// During reads, the first NMI pulse is supressed to give the chip a
-	// cycle to write.
-
-	if (m_next_timer_state)
-	{
-		m_rw[0](0, BIT(m_control, 4));
-		m_rw[1](0, BIT(m_control, 4));
-		m_rw[2](0, BIT(m_control, 4));
-		m_rw[3](0, BIT(m_control, 4));
-	}
-
-	if (m_next_timer_state && !m_read_stretch)
-	{
-		set_nmi(ASSERT_LINE);
-	}
-	else
-	{
-		set_nmi(CLEAR_LINE);
-	}
-	m_read_stretch = false;
-
-	m_chipsel[0](0, BIT(m_control, 0) && m_next_timer_state);
-	m_chipsel[1](0, BIT(m_control, 1) && m_next_timer_state);
-	m_chipsel[2](0, BIT(m_control, 2) && m_next_timer_state);
-	m_chipsel[3](0, BIT(m_control, 3) && m_next_timer_state);
-
-	m_next_timer_state = !m_next_timer_state;
-}
-
 uint8_t namco_06xx_device::data_r(offs_t offset)
 {
 	uint8_t result = 0xff;
@@ -186,19 +152,20 @@ TIMER_CALLBACK_MEMBER( namco_06xx_device::ctrl_w_sync )
 	m_control = param;
 
 	// The upper 3 control bits are the clock divider.
-	if ((m_control & 0xe0) == 0)
-	{
-		m_nmi_timer->adjust(attotime::never);
-		m_next_timer_state = true;
+	if ((m_control & 0xe0) == 0) {
+		// If the divider is zero, stop the clock
+		m_clock_divide_count = 0;
+
 		set_nmi(CLEAR_LINE);
 		m_chipsel[0](0, CLEAR_LINE);
 		m_chipsel[1](0, CLEAR_LINE);
 		m_chipsel[2](0, CLEAR_LINE);
 		m_chipsel[3](0, CLEAR_LINE);
 		// RW is left as-is
-	}
-	else
-	{
+	} else {
+		reset_clock_divide_count();
+		m_timer_state = false;
+
 		// NMI is cleared immediately if this is a read
 		// It will be supressed the next clock cycle.
 		if (BIT(m_control, 4))
@@ -208,29 +175,48 @@ TIMER_CALLBACK_MEMBER( namco_06xx_device::ctrl_w_sync )
 		} else {
 			m_read_stretch = false;
 		}
+	}
+}
 
+TIMER_CALLBACK_MEMBER( namco_06xx_device::clock_timer ) {
+	if (m_clock_divide_count != 0) {
+		m_clock_divide_count--;
 
-		uint8_t num_shifts = (m_control & 0xe0) >> 5;
-		uint8_t divisor = 1 << num_shifts;
-		attotime period = attotime::from_hz(clock() / divisor) / 2;
-		// This delay should be the next falling clock.
-		// That's complicated to get, as it's derived from the master
-		// clock. The CPU uses this same clock, so writes will come at
-		// a specific pace.
-		// Instead, just approximate a quarter cycle.
-		// Xevious is very sensitive to this. It will bootloop if it
-		// isn't correct.
-		attotime delay = attotime::from_hz(clock()) / 4; // average of one clock
-		if (!m_next_timer_state)
-		{
-			// NMI is asserted, wait one additional clock to start
-			m_nmi_timer->adjust(delay + attotime::from_hz(clock() / divisor), 0, period);
-		} else {
-			m_nmi_timer->adjust(delay, 0, period);
+		if (m_clock_divide_count == 0) {
+			reset_clock_divide_count();
+			m_timer_state = !m_timer_state;
+
+			if (m_timer_state)
+			{
+				m_rw[0](0, BIT(m_control, 4));
+				m_rw[1](0, BIT(m_control, 4));
+				m_rw[2](0, BIT(m_control, 4));
+				m_rw[3](0, BIT(m_control, 4));
+			}
+
+			// During reads, the first NMI pulse is supressed to
+			// give the chip a cycle to write.
+			if (m_timer_state && !m_read_stretch)
+			{
+				set_nmi(ASSERT_LINE);
+			}
+			else
+			{
+				set_nmi(CLEAR_LINE);
+			}
+			m_read_stretch = false;
+
+			m_chipsel[0](0, BIT(m_control, 0) && m_timer_state);
+			m_chipsel[1](0, BIT(m_control, 1) && m_timer_state);
+			m_chipsel[2](0, BIT(m_control, 2) && m_timer_state);
+			m_chipsel[3](0, BIT(m_control, 3) && m_timer_state);
 		}
 	}
 }
 
+void namco_06xx_device::reset_clock_divide_count() {
+	m_clock_divide_count = 1 << ((m_control & 0xe0) >> 5);
+}
 
 void namco_06xx_device::set_nmi(int state)
 {
@@ -246,7 +232,8 @@ DEFINE_DEVICE_TYPE(NAMCO_06XX, namco_06xx_device, "namco06", "Namco 06xx")
 namco_06xx_device::namco_06xx_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, NAMCO_06XX, tag, owner, clock)
 	, m_control(0)
-	, m_next_timer_state(false)
+	, m_timer_state(false)
+	, m_clock_divide_count(0)
 	, m_read_stretch(false)
 	, m_nmicpu(*this, finder_base::DUMMY_TAG)
 	, m_chipsel(*this)
@@ -267,11 +254,12 @@ void namco_06xx_device::device_start()
 	m_read.resolve_all_safe(0xff);
 	m_write.resolve_all_safe();
 
-	/* allocate a timer */
-	m_nmi_timer = timer_alloc(FUNC(namco_06xx_device::nmi_generate), this);
+	m_clock = timer_alloc(FUNC(namco_06xx_device::clock_timer), this);
+	m_clock->adjust(attotime::zero, 0, attotime::from_hz(clock()) / 2);
 
 	save_item(NAME(m_control));
-	save_item(NAME(m_next_timer_state));
+	save_item(NAME(m_timer_state));
+	save_item(NAME(m_clock_divide_count));
 	save_item(NAME(m_read_stretch));
 }
 
