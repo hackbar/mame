@@ -1657,6 +1657,90 @@ void bosco_state::bosco(machine_config &config)
 	DISCRETE(config, "discrete", bosco_discrete).add_route(ALL_OUTPUTS, "mono", 0.90);
 }
 
+void galaga_state::galaga_base(machine_config &config)
+{
+	// basic machine hardware, common to bootlegs and genuine alike.
+	Z80(config, m_maincpu, MASTER_CLOCK/6);   /* 3.072 MHz */
+	m_maincpu->set_addrmap(AS_PROGRAM, &galaga_state::galaga_map);
+
+	Z80(config, m_subcpu, MASTER_CLOCK/6);    /* 3.072 MHz */
+	m_subcpu->set_addrmap(AS_PROGRAM, &galaga_state::galaga_map);
+
+	Z80(config, m_subcpu2, MASTER_CLOCK/6);   /* 3.072 MHz */
+	m_subcpu2->set_addrmap(AS_PROGRAM, &galaga_state::galaga_map);
+
+	ls259_device &misclatch(LS259(config, "misclatch")); // 3C on CPU board
+	misclatch.q_out_cb<0>().set(FUNC(galaga_state::irq1_clear_w));
+	misclatch.q_out_cb<1>().set(FUNC(galaga_state::irq2_clear_w));
+	misclatch.q_out_cb<2>().set(FUNC(galaga_state::nmion_w));
+	misclatch.q_out_cb<3>().set_inputline("sub", INPUT_LINE_RESET).invert();
+	misclatch.q_out_cb<3>().append_inputline("sub2", INPUT_LINE_RESET).invert();
+
+	LS259(config, m_videolatch); // 5K on video board
+	// Q0-Q5 to 05XX for starfield control
+	m_videolatch->q_out_cb<7>().set(FUNC(galaga_state::flip_screen_w));
+
+	WATCHDOG_TIMER(config, "watchdog").set_vblank_count(m_screen, 8);
+
+	config.set_maximum_quantum(attotime::from_hz(6000));
+
+	/* video hardware */
+	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	m_screen->set_raw(MASTER_CLOCK/3, 384, 0, 288, 264, 0, 224);
+	m_screen->set_screen_update(FUNC(galaga_state::screen_update_galaga));
+	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE); // starfield lfsr
+	m_screen->screen_vblank().set(FUNC(galaga_state::screen_vblank_galaga));
+	m_screen->screen_vblank().append(FUNC(galaga_state::vblank_irq));
+	m_screen->screen_vblank().append("51xx", FUNC(namco_51xx_device::vblank));
+	m_screen->set_palette("palette");
+
+	GFXDECODE(config, m_gfxdecode, m_palette, gfx_galaga);
+	PALETTE(config, m_palette, FUNC(galaga_state::galaga_palette), 64*4 + 64*4 + 4 + 64, 32+64);
+
+	STARFIELD_05XX(config, m_starfield, 0);
+	m_starfield->set_starfield_config(STARFIELD_X_OFFSET_GALAGA, 0, STARFIELD_X_LIMIT_GALAGA);
+
+	/* sound hardware */
+	SPEAKER(config, "mono").front_center();
+
+	NAMCO(config, m_namco_sound, MASTER_CLOCK/6/32);
+	m_namco_sound->set_voices(3);
+	m_namco_sound->add_route(ALL_OUTPUTS, "mono", 0.90 * 10.0 / 16.0);
+}
+
+void galaga_state::galaga(machine_config &config)
+{
+	galaga_base(config);
+
+	// genuine galaga-specifics
+	misclatch.q_out_cb<3>().append("51xx", FUNC(namco_51xx_device::reset));
+	misclatch.q_out_cb<3>().append("54xx", FUNC(namco_54xx_device::reset));
+
+	namco_51xx_device &n51xx(NAMCO_51XX(config, "51xx", MASTER_CLOCK/6/2));      /* 1.536 MHz */
+	n51xx.input_callback<0>().set_ioport("IN0").mask(0x0f);
+	n51xx.input_callback<1>().set_ioport("IN0").rshift(4);
+	n51xx.input_callback<2>().set_ioport("IN1").mask(0x0f);
+	n51xx.input_callback<3>().set_ioport("IN1").rshift(4);
+	n51xx.output_callback().set(FUNC(galaga_state::out));
+	n51xx.lockout_callback().set(FUNC(galaga_state::lockout));
+
+	namco_54xx_device &n54xx(NAMCO_54XX(config, "54xx", MASTER_CLOCK/6/2));      /* 1.536 MHz */
+	n54xx.set_discrete("discrete");
+	n54xx.set_basenote(NODE_01);
+
+	namco_06xx_device &n06xx(NAMCO_06XX(config, "06xx", MASTER_CLOCK/6/64));
+	n06xx.set_maincpu(m_maincpu);
+	n06xx.chip_select_callback<0>().set("51xx", FUNC(namco_51xx_device::chip_select));
+	n06xx.rw_callback<0>().set("51xx", FUNC(namco_51xx_device::rw));
+	n06xx.read_callback<0>().set("51xx", FUNC(namco_51xx_device::read));
+	n06xx.write_callback<0>().set("51xx", FUNC(namco_51xx_device::write));
+	n06xx.write_callback<3>().set("54xx", FUNC(namco_54xx_device::write));
+	n06xx.chip_select_callback<3>().set("54xx", FUNC(namco_54xx_device::chip_select));
+
+	/* discrete circuit on the 54XX outputs */
+	DISCRETE(config, "discrete", galaga_discrete).add_route(ALL_OUTPUTS, "mono", 0.90);
+}
+
 void galaga_state::galaga(machine_config &config)
 {
 	/* basic machine hardware */
@@ -1736,31 +1820,14 @@ void galaga_state::galaga(machine_config &config)
 
 void galaga_state::galagab(machine_config &config)
 {
-	galaga(config);
+	galaga_base(config);
 
 	/* basic machine hardware */
-
-	config.device_remove("06xx");
-	config.device_remove("54xx");
-	ls259_device* misclatch = reinterpret_cast<ls259_device*>(config.device("misclatch"));
-	// galaga has the custom chips on this line, so just set the resets this board has
-	misclatch->q_out_cb<3>().set_inputline("sub", INPUT_LINE_RESET).invert();
-	misclatch->q_out_cb<3>().append_inputline("sub2", INPUT_LINE_RESET).invert();
-	misclatch->q_out_cb<3>().append_inputline("sub3", INPUT_LINE_RESET).invert();
-
-	/* FIXME: bootlegs should not have any Namco custom chip. However, this workaround is needed atm */
-	namco_06xx_device &n06xx(NAMCO_06XX(config, "06xx", MASTER_CLOCK/6/64));
-	n06xx.set_maincpu(m_maincpu);
-	n06xx.chip_select_callback<0>().set("51xx", FUNC(namco_51xx_device::chip_select));
-	n06xx.rw_callback<0>().set("51xx", FUNC(namco_51xx_device::rw));
-	n06xx.read_callback<0>().set("51xx", FUNC(namco_51xx_device::read));
-	n06xx.write_callback<0>().set("51xx", FUNC(namco_51xx_device::write));
-
 	z80_device &sub3(Z80(config, "sub3", MASTER_CLOCK/6));   /* 3.072 MHz */
 	sub3.set_addrmap(AS_PROGRAM, &galaga_state::galaga_mem4);
 
-	/* sound hardware */
-	config.device_remove("discrete");
+	ls259_device* misclatch = reinterpret_cast<ls259_device*>(config.device("misclatch"));
+	misclatch->q_out_cb<3>().append_inputline("sub3", INPUT_LINE_RESET).invert();
 }
 
 void galaga_state::gatsbee(machine_config &config)

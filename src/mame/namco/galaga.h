@@ -63,6 +63,7 @@ public:
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect );
 	uint16_t get_next_lfsr_state(uint16_t lfsr);
 	void draw_stars(bitmap_ind16 &bitmap, const rectangle &cliprect );
+	void galaga_base(machine_config &config);
 	void galaga(machine_config &config);
 	void gatsbee(machine_config &config);
 	void galagab(machine_config &config);
