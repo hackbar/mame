@@ -68,6 +68,7 @@ public:
 	void gatsbee(machine_config &config);
 	void galagab(machine_config &config);
 	void dzigzag_mem4(address_map &map);
+	void galaga_base_map(address_map &map);
 	void galaga_map(address_map &map);
 	void galaga_mem4(address_map &map);
 	void gatsbee_main_map(address_map &map);
@@ -81,6 +82,7 @@ protected:
 	optional_shared_ptr<uint8_t> m_videoram;
 	optional_shared_ptr<uint8_t> m_galaga_ram1;
 	optional_shared_ptr<uint8_t> m_galaga_ram2;
+	optional_shared_ptr<uint8_t> m_galaga_ram3;
 	optional_shared_ptr<uint8_t> m_galaga_ram3;
 	optional_device<ls259_device> m_videolatch; // not present on Xevious
 	required_device<cpu_device> m_maincpu;
