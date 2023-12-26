@@ -51,6 +51,8 @@
 
 #include "emu.h"
 #include "namco54.h"
+#define VERBOSE 1
+#include "logmacro.h"
 
 
 void namco_54xx_device::reset(int state)
@@ -94,6 +96,7 @@ void namco_54xx_device::write(uint8_t data)
 TIMER_CALLBACK_MEMBER( namco_54xx_device::write_sync )
 {
 	m_latched_cmd = param;
+	logerror("write %02x\n", param);
 }
 
 
