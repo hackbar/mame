@@ -63,11 +63,13 @@ void namco_54xx_device::reset(int state)
 
 uint8_t namco_54xx_device::K_r()
 {
+	logerror("read %02x\n", m_latched_cmd >> 4);
 	return m_latched_cmd >> 4;
 }
 
 uint8_t namco_54xx_device::R0_r()
 {
+	logerror("read %02x\n", m_latched_cmd & 0x0f);
 	return m_latched_cmd & 0x0f;
 }
 
