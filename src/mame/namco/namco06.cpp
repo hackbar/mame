@@ -215,6 +215,9 @@ TIMER_CALLBACK_MEMBER( namco_06xx_device::ctrl_w_sync )
 		uint8_t num_shifts = (m_control & 0xe0) >> 5;
 		uint8_t divisor = 1 << num_shifts;
 		attotime period = attotime::from_hz(clock() / divisor) / 2;
+		if ((m_control & 0xf) == 8) {
+			logerror("d %1x period is %s\n", m_control & 0xf, period.to_string());
+		}
 
 		// Delay to the next falling clock edge
 		attotime now = machine().time();
