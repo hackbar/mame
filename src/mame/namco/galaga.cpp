@@ -1657,6 +1657,7 @@ void galaga_state::galaga(machine_config &config)
 	/* basic machine hardware */
 	Z80(config, m_maincpu, MASTER_CLOCK/6);   /* 3.072 MHz */
 	m_maincpu->set_addrmap(AS_PROGRAM, &galaga_state::galaga_map);
+	config.set_perfect_quantum(m_maincpu);
 
 	Z80(config, m_subcpu, MASTER_CLOCK/6);    /* 3.072 MHz */
 	m_subcpu->set_addrmap(AS_PROGRAM, &galaga_state::galaga_map);
