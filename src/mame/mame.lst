@@ -1534,6 +1534,7 @@ arcadecl
 sparkz
 
 @source:atari/asteroid.cpp
+bigasteroid
 aerolitol
 aerolitos
 astdelux
