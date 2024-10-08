@@ -945,6 +945,17 @@ void asteroid_state::llander(machine_config &config)
  *
  *************************************/
 
+ROM_START( bigasteroid )
+	ROM_REGION( 0x8000, "maincpu", 0 )
+	ROM_LOAD( "prg.rom", 0x6800, 0x1800, CRC(b503eaf7) SHA1(5369dcfe01c0b9e48b15a96a0de8d23ee8ef9145) )
+	// Vector ROM
+	ROM_LOAD( "vector.rom",  0x5000, 0x0800, CRC(8b71fd9e) SHA1(8cd5005e531eafa361d6b7e9eed159d164776c70) )
+
+	// DVG PROM
+	ROM_REGION( 0x100, "dvg:prom", 0 )
+	ROM_LOAD( "034602-01.c8",   0x0000, 0x0100, CRC(97953db8) SHA1(8cbded64d1dd35b18c4d5cece00f77e7b2cab2ad) )
+ROM_END
+
 ROM_START( asteroid )
 	ROM_REGION( 0x8000, "maincpu", 0 )
 	ROM_LOAD( "035145-04e.ef2", 0x6800, 0x0800, CRC(b503eaf7) SHA1(5369dcfe01c0b9e48b15a96a0de8d23ee8ef9145) )
@@ -1331,6 +1342,7 @@ void asteroid_state::init_asterock()
  *************************************/
 
 //    YEAR  NAME        PARENT    MACHINE   INPUT      STATE           INIT            ROT   COMPANY,                        FULLNAME,                                              FLAGS                  LAYOUT
+GAME( 1979, bigasteroid,   0,        asteroid, asteroid,  asteroid_state, empty_init,     ROT0, "Atari",                        "Asteroids but diff",                                   MACHINE_SUPPORTS_SAVE )
 GAME( 1979, asteroid,   0,        asteroid, asteroid,  asteroid_state, empty_init,     ROT0, "Atari",                        "Asteroids (rev 4)",                                   MACHINE_SUPPORTS_SAVE )
 GAME( 1979, asteroid2,  asteroid, asteroid, asteroid,  asteroid_state, empty_init,     ROT0, "Atari",                        "Asteroids (rev 2)",                                   MACHINE_SUPPORTS_SAVE )
 GAME( 1979, asteroid1,  asteroid, asteroid, asteroid,  asteroid_state, empty_init,     ROT0, "Atari",                        "Asteroids (rev 1)",                                   MACHINE_SUPPORTS_SAVE )
