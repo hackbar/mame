@@ -701,16 +701,12 @@ void tempest_state::tempest(machine_config &config)
 ROM_START( tempest ) /* rev 3 */
 	/* Roms are for Tempest Analog Vector-Generator PCB Assembly A037383-03 or A037383-04 */
 	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD( "136002-133.d1",  0x9000, 0x1000, CRC(1d0cc503) SHA1(7bef95db9b1102d6b1166bda0ccb276ef4cc3764) ) /* 136002-113 + 136002-114 */
-	ROM_LOAD( "136002-134.f1",  0xa000, 0x1000, CRC(c88e3524) SHA1(89144baf1efc703b2336774793ce345b37829ee7) ) /* 136002-115 + 136002-316 */
-	ROM_LOAD( "136002-235.j1",  0xb000, 0x1000, CRC(a4b2ce3f) SHA1(a5f5fb630a48c5d25346f90d4c13aaa98f60b228) ) /* 136002-217 + 136002-118 */
-	ROM_LOAD( "136002-136.lm1", 0xc000, 0x1000, CRC(65a9a9f9) SHA1(73aa7d6f4e7093ccb2d97f6344f354872bcfd72a) ) /* 136002-119 + 136002-120 */
-	ROM_LOAD( "136002-237.p1",  0xd000, 0x1000, CRC(de4e9e34) SHA1(04be074e45bf5cd95a852af97cd04e35b7f27fc4) ) /* 136002-121 + 136002-222 */
-	ROM_RELOAD(                 0xf000, 0x1000 ) /* for reset/interrupt vectors */
+	ROM_LOAD( "prg.rom", 0x9000, 0x5000, CRC(1d0cc503) SHA1(7bef95db9b1102d6b1166bda0ccb276ef4cc3764) )
+	ROM_LOAD( "reset_vectors.rom", 0xf000, 0x1000, CRC(1d0cc503) SHA1(7bef95db9b1102d6b1166bda0ccb276ef4cc3764) )
 
 	/* Vector ROM */
 	ROM_REGION( 0x1000, "vectorrom", 0 )
-	ROM_LOAD( "136002-138.np3", 0x0000, 0x1000, CRC(9995256d) SHA1(2b725ee1a57d423c7d7377a1744f48412e0f2f69) )
+	ROM_LOAD( "vector.rom", 0x0000, 0x1000, CRC(9995256d) SHA1(2b725ee1a57d423c7d7377a1744f48412e0f2f69) )
 
 	/* AVG PROM */
 	ROM_REGION( 0x100, "avg:prom", 0 )
