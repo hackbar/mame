@@ -308,7 +308,7 @@ public:
 		m_maincpu(*this, "maincpu"),
 		m_mathbox(*this, "mathbox"),
 		m_watchdog(*this, "watchdog"),
-		m_avg(*this, "avg"),
+		m_dvg(*this, "dvg"),
 		m_earom(*this, "earom"),
 		m_rom(*this, "maincpu"),
 		m_knob_p1(*this, TEMPEST_KNOB_P1_TAG),
@@ -345,7 +345,7 @@ protected:
 	required_device<cpu_device> m_maincpu;
 	required_device<mathbox_device> m_mathbox;
 	required_device<watchdog_timer_device> m_watchdog;
-	required_device<avg_device> m_avg;
+	required_device<dvg_device> m_dvg;
 	required_device<er2055_device> m_earom;
 	required_region_ptr<uint8_t> m_rom;
 
@@ -436,8 +436,8 @@ void tempest_state::tempest_coin_w(uint8_t data)
 	machine().bookkeeping().coin_counter_w(0, (data & 0x01));
 	machine().bookkeeping().coin_counter_w(1, (data & 0x02));
 	machine().bookkeeping().coin_counter_w(2, (data & 0x04));
-	m_avg->set_flip_x(data & 0x08);
-	m_avg->set_flip_y(data & 0x10);
+	//m_avg->set_flip_x(data & 0x08);
+	//m_avg->set_flip_y(data & 0x10);
 }
 
 
@@ -495,9 +495,9 @@ void tempest_state::main_map(address_map &map)
 	map(0x2000, 0x2fff).ram();
 	map(0x3000, 0x3fff).rom().region("vectorrom", 0);
 	map(0x4000, 0x4000).w(FUNC(tempest_state::tempest_coin_w));
-	map(0x4800, 0x4800).w(m_avg, FUNC(avg_device::go_w));
+	map(0x4800, 0x4800).w(m_dvg, FUNC(dvg_device::go_w));
 	map(0x5000, 0x5000).w(FUNC(tempest_state::wdclr_w));
-	map(0x5800, 0x5800).w(m_avg, FUNC(avg_device::reset_w));
+	map(0x5800, 0x5800).w(m_dvg, FUNC(dvg_device::reset_w));
 	map(0x6000, 0x603f).w(FUNC(tempest_state::earom_write));
 	map(0x6040, 0x6040).r(m_mathbox, FUNC(mathbox_device::status_r)).w(FUNC(tempest_state::earom_control_w));
 	map(0x6050, 0x6050).r(FUNC(tempest_state::earom_read));
@@ -529,7 +529,7 @@ static INPUT_PORTS_START( tempest )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_NAME("Diagnostic Step")
 	/* bit 6 is the VG HALT bit. We set it to "low" */
 	/* per default (busy vector processor). */
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("avg", avg_device, done_r)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("dvg", dvg_device, done_r)
 	/* bit 7 is tied to a 3kHz (?) clock */
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(tempest_state, clock_r)
 
@@ -649,15 +649,16 @@ void tempest_state::tempest(machine_config &config)
 
 	/* video hardware */
 	VECTOR(config, "vector");
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_VECTOR));
-	screen.set_refresh_hz(60);
-	screen.set_size(400, 300);
-	screen.set_visarea(0, 580, 0, 570);
-	screen.set_screen_update("vector", FUNC(vector_device::screen_update));
+        screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_VECTOR));
+        screen.set_refresh_hz(CLOCK_3KHZ/12/4);
+        screen.set_size(400, 300);
+        screen.set_visarea(522, 1566, 394, 1182);
+        screen.set_screen_update("vector", FUNC(vector_device::screen_update));
 
-	AVG_TEMPEST(config, m_avg, 0);
-	m_avg->set_vector("vector");
-	m_avg->set_memory(m_maincpu, AS_PROGRAM, 0x2000);
+        DVG(config, m_dvg, 0);
+        m_dvg->set_vector("vector");
+        m_dvg->set_memory(m_maincpu, AS_PROGRAM, 0x2000);
+
 
 	/* Drivers */
 	MATHBOX(config, m_mathbox, 0);
@@ -708,9 +709,9 @@ ROM_START( tempest ) /* rev 3 */
 	ROM_REGION( 0x1000, "vectorrom", 0 )
 	ROM_LOAD( "vector.rom", 0x0000, 0x1000, CRC(9995256d) SHA1(2b725ee1a57d423c7d7377a1744f48412e0f2f69) )
 
-	/* AVG PROM */
-	ROM_REGION( 0x100, "avg:prom", 0 )
-	ROM_LOAD( "136002-125.d7",   0x0000, 0x0100, CRC(5903af03) SHA1(24bc0366f394ad0ec486919212e38be0f08d0239) )
+        // DVG PROM
+        ROM_REGION( 0x100, "dvg:prom", 0 )
+        ROM_LOAD( "034602-01.c8",   0x0000, 0x0100, CRC(97953db8) SHA1(8cbded64d1dd35b18c4d5cece00f77e7b2cab2ad) )
 
 	/* Mathbox PROMs */
 	ROM_REGION( 0x20, "user2", 0 )
