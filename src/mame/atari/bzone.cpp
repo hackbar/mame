@@ -708,6 +708,30 @@ Rom Component Equivalents & Locations:
 
 */
 
+ROM_START( basterzone )
+	ROM_REGION( 0x8000, "maincpu", 0 )
+	ROM_LOAD( "prg.rom",  0x5000, 0x3000, CRC(13de36d5) SHA1(40e356ddc5c042bc1ce0b71f51e8b6de72daf1e4) )
+	// Vector Generator ROMs
+	ROM_LOAD( "vector.rom", 0x3000, 0x1000, CRC(7414177b) SHA1(147d97a3b475e738ce00b1a7909bbd787ad06eda) )
+
+	// AVG PROM
+	ROM_REGION( 0x100, "avg:prom", 0 )
+	ROM_LOAD( "036408-01.k7",   0x0000, 0x0100, CRC(5903af03) SHA1(24bc0366f394ad0ec486919212e38be0f08d0239) )
+
+	// Mathbox PROMs
+	ROM_REGION( 0x20, "user2", 0 )
+	ROM_LOAD( "036174-01.b1",   0x0000, 0x0020, CRC(8b04f921) SHA1(317b3397482f13b2d1bc21f296d3b3f9a118787b) )
+
+	ROM_REGION32_BE( 0x400, "user3", 0 )
+	ROMX_LOAD( "036175-01.m1", 0, 0x100, CRC(2af82e87) SHA1(3816835a9ccf99a76d246adf204989d9261bb065), ROM_NIBBLE | ROM_SHIFT_NIBBLE_LO | ROM_SKIP(3))
+	ROMX_LOAD( "036176-01.l1", 0, 0x100, CRC(b31f6e24) SHA1(ce5f8ca34d06a5cfa0076b47400e61e0130ffe74), ROM_NIBBLE | ROM_SHIFT_NIBBLE_HI | ROM_SKIP(3))
+	ROMX_LOAD( "036177-01.k1", 1, 0x100, CRC(8119b847) SHA1(c4fbaedd4ce1ad6a4128cbe902b297743edb606a), ROM_NIBBLE | ROM_SHIFT_NIBBLE_LO | ROM_SKIP(3))
+	ROMX_LOAD( "036178-01.j1", 1, 0x100, CRC(09f5a4d5) SHA1(d6f2ac07ca9ee385c08831098b0dcaf56808993b), ROM_NIBBLE | ROM_SHIFT_NIBBLE_HI | ROM_SKIP(3))
+	ROMX_LOAD( "036179-01.h1", 2, 0x100, CRC(823b61ae) SHA1(d99a839874b45f64e14dae92a036e47a53705d16), ROM_NIBBLE | ROM_SHIFT_NIBBLE_LO | ROM_SKIP(3))
+	ROMX_LOAD( "036180-01.f1", 2, 0x100, CRC(276eadd5) SHA1(55718cd8ec4bcf75076d5ef0ee1ed2551e19d9ba), ROM_NIBBLE | ROM_SHIFT_NIBBLE_HI | ROM_SKIP(3))
+ROM_END
+
+
 ROM_START( bzone ) // Analog Vec Gen A035742-02
 	ROM_REGION( 0x8000, "maincpu", 0 )
 	ROM_LOAD( "036414-02.e1",  0x5000, 0x0800, CRC(13de36d5) SHA1(40e356ddc5c042bc1ce0b71f51e8b6de72daf1e4) )
@@ -1008,6 +1032,7 @@ void bzone_state::analog_select_w(offs_t offset, uint8_t data)
  *
  *************************************/
 //    YEAR  NAME       PARENT    MACHINE   INPUT     CLASS           INIT        ROT   COMPANY  FULLNAME                        FLAGS                                        LAYOUT
+GAMEL(1980, basterzone,     0,        bzone,    bzone,    bzone_state,    empty_init, ROT0, "Atari", "Asteroids on Battle Zone",          MACHINE_SUPPORTS_SAVE,                       layout_bzone )
 GAMEL(1980, bzone,     0,        bzone,    bzone,    bzone_state,    empty_init, ROT0, "Atari", "Battle Zone (rev 2)",          MACHINE_SUPPORTS_SAVE,                       layout_bzone )
 GAMEL(1980, bzonea,    bzone,    bzone,    bzone,    bzone_state,    empty_init, ROT0, "Atari", "Battle Zone (rev 1)",          MACHINE_SUPPORTS_SAVE,                       layout_bzone )
 GAMEL(1980, bzonec,    bzone,    bzone,    bzone,    bzone_state,    empty_init, ROT0, "Atari", "Battle Zone (cocktail)",       MACHINE_SUPPORTS_SAVE | MACHINE_NO_COCKTAIL, layout_bzone )
