@@ -19,6 +19,9 @@
 
 #include "screen.h"
 
+#define VERBOSE 1
+#include "logmacro.h"
+
 
 /*************************************
  *
@@ -681,6 +684,13 @@ int avg_tempest_device::handler_6() // tempest_strobe2
 	if (!OP2() && !m_dvy12)
 	{
 		// Contrary to previous documentation in MAME, Tempest does not have the m_enspkl bit.
+		bool bit = m_dvy & 0x800;
+		int color = m_dvy & 0xf;
+		int bright = (m_dvy >> 4) & 0xf;
+		if ((bit && bright) || (!bit && color)) {
+			logerror("bit is %d color is %x bright is %x\n", bit, color, bright);
+		}
+
 		if (m_dvy & 0x800)
 			m_color = m_dvy & 0xf;
 		else
